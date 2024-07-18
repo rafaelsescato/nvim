@@ -87,22 +87,45 @@ return {
 		-----------------------------------------------------
 		--                    LSP                          --
 		-----------------------------------------------------
-		"neovim/nvim-lspconfig", -- https://github.com/neovim/nvim-lspconfig
+		"neovim/nvim-lspconfig",        -- https://github.com/neovim/nvim-lspconfig
 		dependencies = {
-			"hrsh7th/cmp-nvim-lsp", -- https://github.com/hrsh7th/cmp_nvim_lsp
-			"williamboman/mason.nvim", -- https://github.com/williamboman/mason.nvim
+			"hrsh7th/cmp-nvim-lsp",     -- https://github.com/hrsh7th/cmp_nvim_lsp
+			"williamboman/mason.nvim",  -- https://github.com/williamboman/mason.nvim
+			"williamboman/mason-lspconfig.nvim", -- https://github.com/williamboman/mason-lspconfig.nvim
 		},
 		config = function()
-			local lspconfig = require("lspconfig")
-			local capabilities = require("cmp_nvim_lsp").default_capabilities()
-			require("mason").setup()
+			-- local lspconfig = require("lspconfig")
 
-			-- Python
-			lspconfig.pyright.setup(capabilities)
-			-- GDScript
-			lspconfig.gdscript.setup(capabilities)
-			-- Lua
-			lspconfig.lua_ls.setup(capabilities)
+			-- config mason and mason-lspconfig
+			require("mason").setup()
+			require("mason-lspconfig").setup({
+				automatic_installation = true,
+			})
+
+			-- Função on_attach que configura o autocmd para formatar ao salvar
+			local on_attach = function(client, bufnr)
+				-- Cria um autocmd para formatar o buffer antes de salvar
+				vim.api.nvim_create_autocmd("BufWritePre", {
+					buffer = bufnr,
+					callback = function()
+						vim.lsp.buf.format({ async = false })
+					end,
+				})
+			end
+
+			-- Capacidades do cliente LSP para integração com nvim-cmp
+			local capabilities = require("cmp_nvim_lsp").default_capabilities()
+
+			-- Configurar os handlers do mason-lspconfig
+			require("mason-lspconfig").setup_handlers({
+				function(server_name)
+					require("lspconfig")[server_name].setup({
+						on_attach = on_attach,
+						capabilities = capabilities,
+						-- Outras configurações específicas do servidor podem ir aqui
+					})
+				end,
+			})
 
 			-- floating diagnostics message
 			vim.diagnostic.config({
@@ -117,37 +140,34 @@ return {
 	},
 	{
 		-----------------------------------------------------
-		--           FORMATTING AND DIAGNOSTICS            --
+		--                  CODE FORMATTER                 --
 		-----------------------------------------------------
-		"nvimtools/none-ls.nvim",   -- https://github.com/nvimtools/none-ls.nvim
+		"jay-babu/mason-null-ls.nvim",
+		event = { "BufReadPre", "BufNewFile" },
 		dependencies = {
-			"nvimtools/none-ls-extras.nvim", -- https://github.com/nvimtools/none-ls-extras.nvim
+			"williamboman/mason.nvim",
+			"nvimtools/none-ls.nvim",
 		},
 		config = function()
-			local null_ls = require("null-ls")
-			null_ls.setup({
-				sources = {
-					-- Lua
-					null_ls.builtins.formatting.stylua,
-
-					-- GDScript
-					null_ls.builtins.formatting.gdformat,
-					null_ls.builtins.diagnostics.gdlint,
-
-					-- Python
-					null_ls.builtins.formatting.isort,
-					null_ls.builtins.formatting.black,
-					require("null_ls.builtins.diagnostics.flake8"),
-
-					-- JavaScript, TypeScript, JSX, CSS, SCSS, Less,
-					-- JSON, HTML, Markdown, YAML, GraphQL, Vue.js (.vue files),
-					-- React.js (.jsx, .tsx files), Angular (.component.ts, .service.ts files)
-					null_ls.builtins.formatting.prettier,
-
-					-- JavaScript (JS), TypeScript (TS), JSX, Vue.js (.vue files)
-					-- React.js (.jsx, .tsx files)
-					-- null_ls.builtins.diagnostics.eslint,
-				},
+			require("mason").setup()
+			require("mason-null-ls").setup({
+				handlers = {},
+			})
+		end,
+	},
+	{
+		-----------------------------------------------------
+		--                  CODE LINTER                    --
+		-----------------------------------------------------
+		"rshkarin/mason-nvim-lint",
+		event = { "BufReadPre", "BufNewFile" },
+		dependencies = {
+			"williamboman/mason.nvim",
+			"mfussenegger/nvim-lint",
+		},
+		config = function()
+			require("mason-nvim-lint").setup({
+				automatic_installation = true,
 			})
 		end,
 	},
