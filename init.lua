@@ -6,23 +6,24 @@ local set = vim.opt
 
 set.number = true
 set.relativenumber = true
-set.completeopt = "noinsert,menuone,noselect"
-set.shiftwidth = 4
 set.clipboard = "unnamedplus"
+set.shiftwidth = 4
 set.tabstop = 4
-set.expandtab = false
 set.swapfile = false
 set.wrap = true
 set.foldmethod = "manual"
 set.mouse = "a"
-set.termguicolors = true
-set.wildmenu = true
 set.splitbelow = true
 set.splitright = true
-set.ttimeoutlen = 0
-set.updatetime = 250
-set.title = true
-set.smarttab = true
+set.termguicolors = true
+set.linebreak = true
+set.display:append("lastline")
+set.spell = false
+set.spelllang = { "en_us", "pt_br" }
+set.spellfile = {
+	"~/.config/nvim/spell/en.utf-8.add",
+	"~/.config/nvim/spell/pt.utf-8.add",
+}
 
 -----------------------------------------------------
 --                 LEADER KEY                      --
@@ -39,7 +40,7 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 	if vim.v.shell_error ~= 0 then
 		vim.api.nvim_echo({
 			{ "Failed to clone lazy.nvim:\n", "ErrorMsg" },
-			{ out, "WarningMsg" },
+			{ out,                            "WarningMsg" },
 			{ "\nPress any key to exit..." },
 		}, true, {})
 		vim.fn.getchar()
@@ -56,6 +57,7 @@ require("lazy").setup({
 		enabled = false,
 		notify = false,
 	},
+	change_detection = { enabled = false },
 })
 
 -----------------------------------------------------
@@ -66,24 +68,36 @@ vim.cmd([[ colorscheme onedark ]])
 -----------------------------------------------------
 --                   KEYMAPS                       --
 -----------------------------------------------------
---[[
-Defines a key mapping with noremap and silent options.
-@param vim_mode string: The mode in which the mapping applies (e.g., 'n' for normal mode).
-@param key string: The key combination for the mapping.
-@param command string or function: The command or function to execute.
-]]
-_G.kmap = function(vim_mode, key, command)
+----[[
+--Defines a key mapping with noremap and silent options.
+--@param vim_mode string: The mode in which the mapping applies (e.g., 'n' for normal mode).
+--@param key string: The key combination for the mapping.
+--@param command string or function: The command or function to execute.
+--]]
+--_G.kmap = function(vim_mode, key, command)
+--	local keymap = vim.keymap.set
+--	local options = { noremap = true, silent = true }
+
+--	keymap(vim_mode, key, command, options)
+--end
+
+-- Define a key mapping with noremap and silent options
+-- @param vim_mode string: The mode in which the mapping applies (e.g., 'n' for normal mode)
+-- @param key string: The key combination for the mapping
+-- @param command string or function: The command or function to execute
+-- @param description string: A description of the mapping for documentation
+_G.kmap = function(vim_mode, key, command, description)
 	local keymap = vim.keymap.set
-	local options = { noremap = true, silent = true }
+	local options = { noremap = true, silent = true, desc = description }
 
 	keymap(vim_mode, key, command, options)
 end
 
 -- save buffer
-kmap("n", "<leader>w", ":w<CR>")
+kmap("n", "<leader>w", ":w<CR>", "Save buffer.\n\n")
 
 -- close buffer
-kmap("n", "<leader>q", ":bd<CR>")
+kmap("n", "<leader>q", ":bd<CR>", "Close current buffer.\n\n")
 
 -- change next buffer
 kmap("n", "<leader>.", ":bn<CR>")
@@ -93,6 +107,9 @@ kmap("n", "<leader>,", ":bp<CR>")
 
 -- change previous buffer
 kmap("n", "<C-'>", ":sp | term<CR>i")
+
+-- spell suggestions
+kmap("n", "<leader>s", "z=")
 
 -- change window in terminal mode
 kmap("t", "<A-h>", "<C-\\><C-N><C-w>h")
@@ -121,25 +138,28 @@ kmap("x", "<A-l>", "<Plug>GoVSMRight")
 
 -- PLUGIN: "tpope/vim-commentary"
 -- toggle commentary in visual mode
+kmap("n", "<C-/>", "v<Plug>Commentary")
 kmap("v", "<C-/>", "<Plug>Commentary")
 
 -- PLUGIN: "nvim-neo-tree/neo-tree.nvim"
 -- toggle neotree
 kmap("n", "<leader>e", ":Neotree toggle<CR>")
 
--- PLUGIN: "folke/zen-mode.nvim"
--- toggle zen mode
-kmap("n", "<C-z>", ":ZenMode<CR>")
+-- "folke/zen-mode.nvim"
+kmap("n", "<C-z>", ":ZenMode<CR>", "Toggle to zen mode.\n\n")
 
--- PLUGIN: "nvim-telescope/telescope.nvim"
-local telescope = require("telescope.builtin")
--- file finder
-kmap("n", "<leader>ff", telescope.find_files)
--- fuzzy finder
-kmap("n", "<leader>fg", telescope.live_grep)
--- open recent files
-kmap("n", "<leader>fo", telescope.oldfiles)
+-- "nvim-telescope/telescope.nvim"
+kmap("n", "<leader>ff", ":Telescope find_files<CR>", "Find files in working directory.\n\n")
+kmap("n", "<leader>fg", ":Telescope live_grep<CR>", "Fuzzy finder in working directory.\n\n")
+kmap("n", "<leader>fo", ":Telescope oldfiles<CR>", "Reopen recent files.\n\n")
 
--- PLUGIN: "neovim/nvim-lspconfig"
--- format buffer
-kmap("n", "<leader>f", vim.lsp.buf.format)
+-- "neovim/nvim-lspconfig"
+kmap("n", "<Leader>f", "<Cmd>lua vim.lsp.buf.format()<CR>", "Formar current buffer.\n\n")
+kmap("n", "<C-Space>", "<Cmd>lua vim.lsp.buf.hover()<CR>", "Open documentation.\n\n")
+
+-----------------------------------------------------
+--                REMOTE NEOVIM                    --
+-----------------------------------------------------
+if vim.fn.has("nvim") == 1 then
+	vim.env.NVIM_LISTEN_ADDRESS = "/tmp/nvim"
+end

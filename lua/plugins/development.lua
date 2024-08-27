@@ -3,13 +3,13 @@ return {
 		-----------------------------------------------------
 		--      GENERAL SUGGESTIONS AND AUTOCOMPLETE       --
 		-----------------------------------------------------
-		"hrsh7th/nvim-cmp",        -- https://github.com/hrsh7th/nvim-cmp
+		"hrsh7th/nvim-cmp", -- https://github.com/hrsh7th/nvim-cmp
 		dependencies = {
-			"hrsh7th/cmp-buffer",  -- https://github.com/hrsh7th/cmp-buffer
+			"hrsh7th/cmp-buffer", -- https://github.com/hrsh7th/cmp-buffer
 			"hrsh7th/cmp-cmdline", -- https://github.com/hrsh7th/cmp-cmdline
-			"hrsh7th/cmp-path",    -- https://github.com/hrsh7th/cmp-path
+			"hrsh7th/cmp-path", -- https://github.com/hrsh7th/cmp-path
 			"hrsh7th/cmp-nvim-lsp", -- https://github.com/hrsh7th/cmp_nvim_lsp
-			"L3MON4D3/LuaSnip",    -- https://github.com/L3MON4D3/LuaSnip
+			"L3MON4D3/LuaSnip", -- https://github.com/L3MON4D3/LuaSnip
 			"saadparwaiz1/cmp_luasnip", -- https://github.com/saadparwaiz1/cmp_luasnip
 			"rafamadriz/friendly-snippets", -- https://github.com/rafamadriz/friendly-snippets
 		},
@@ -87,20 +87,17 @@ return {
 		-----------------------------------------------------
 		--                    LSP                          --
 		-----------------------------------------------------
-		"neovim/nvim-lspconfig",        -- https://github.com/neovim/nvim-lspconfig
+		"neovim/nvim-lspconfig", -- https://github.com/neovim/nvim-lspconfig
 		dependencies = {
-			"hrsh7th/cmp-nvim-lsp",     -- https://github.com/hrsh7th/cmp_nvim_lsp
-			"williamboman/mason.nvim",  -- https://github.com/williamboman/mason.nvim
+			"hrsh7th/cmp-nvim-lsp", -- https://github.com/hrsh7th/cmp_nvim_lsp
+			"williamboman/mason.nvim", -- https://github.com/williamboman/mason.nvim
 			"williamboman/mason-lspconfig.nvim", -- https://github.com/williamboman/mason-lspconfig.nvim
 		},
 		config = function()
-			-- local lspconfig = require("lspconfig")
+			local lspconfig = require("lspconfig")
 
-			-- config mason and mason-lspconfig
-			require("mason").setup()
-			require("mason-lspconfig").setup({
-				automatic_installation = true,
-			})
+			-- Capacidades do cliente LSP para integração com nvim-cmp
+			local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
 			-- Função on_attach que configura o autocmd para formatar ao salvar
 			local on_attach = function(client, bufnr)
@@ -113,8 +110,17 @@ return {
 				})
 			end
 
-			-- Capacidades do cliente LSP para integração com nvim-cmp
-			local capabilities = require("cmp_nvim_lsp").default_capabilities()
+			-- add manual gdscript lsp
+			lspconfig.gdscript.setup({
+				on_attach = on_attach,
+				capabilities = capabilities,
+			})
+
+			-- config mason and mason-lspconfig
+			require("mason").setup()
+			require("mason-lspconfig").setup({
+				automatic_installation = true,
+			})
 
 			-- Configurar os handlers do mason-lspconfig
 			require("mason-lspconfig").setup_handlers({
@@ -122,7 +128,6 @@ return {
 					require("lspconfig")[server_name].setup({
 						on_attach = on_attach,
 						capabilities = capabilities,
-						-- Outras configurações específicas do servidor podem ir aqui
 					})
 				end,
 			})
@@ -150,6 +155,16 @@ return {
 		},
 		config = function()
 			require("mason").setup()
+
+			local null_ls = require("null-ls")
+			null_ls.setup({
+				sources = {
+					-- add manual for godot
+					null_ls.builtins.formatting.gdformat,
+					null_ls.builtins.diagnostics.gdlint,
+				},
+			})
+
 			require("mason-null-ls").setup({
 				handlers = {},
 			})
@@ -166,9 +181,7 @@ return {
 			"mfussenegger/nvim-lint",
 		},
 		config = function()
-			require("mason-nvim-lint").setup({
-				automatic_installation = true,
-			})
+			require("mason-nvim-lint").setup()
 		end,
 	},
 	{
