@@ -92,6 +92,7 @@ return {
 			"hrsh7th/cmp-nvim-lsp", -- https://github.com/hrsh7th/cmp_nvim_lsp
 			"williamboman/mason.nvim", -- https://github.com/williamboman/mason.nvim
 			"williamboman/mason-lspconfig.nvim", -- https://github.com/williamboman/mason-lspconfig.nvim
+			"ray-x/lsp_signature.nvim", -- https://github.com/ray-x/lsp_signature.nvim
 		},
 		config = function()
 			local lspconfig = require("lspconfig")
@@ -108,6 +109,15 @@ return {
 						vim.lsp.buf.format({ async = false })
 					end,
 				})
+
+				-- signature helper
+				require("lsp_signature").on_attach({
+					bind = true,
+					hint_enable = false, -- disable floating tips
+					handler_opts = {
+						border = "rounded",
+					},
+				}, bufnr)
 			end
 
 			-- add manual gdscript lsp
