@@ -153,6 +153,7 @@ return {
 			]])
 		end,
 	},
+
 	{
 		-----------------------------------------------------
 		--                  CODE FORMATTER                 --
@@ -169,14 +170,22 @@ return {
 			local null_ls = require("null-ls")
 			null_ls.setup({
 				sources = {
-					-- add manual for godot
+					-- manual installation
 					null_ls.builtins.formatting.gdformat,
 					null_ls.builtins.diagnostics.gdlint,
 				},
 			})
 
 			require("mason-null-ls").setup({
-				handlers = {},
+				automatic_installation = true,
+				-- automatic_installation = {
+				-- 	exclude = {
+				-- 		"clj_kondo",
+				-- 		"inko",
+				-- 		"ruby",
+				-- 		"janet",
+				-- 	},
+				-- },
 			})
 		end,
 	},
@@ -191,7 +200,9 @@ return {
 			"mfussenegger/nvim-lint",
 		},
 		config = function()
-			require("mason-nvim-lint").setup()
+			require("mason-nvim-lint").setup({
+				quiet_mode = true,	
+			})
 		end,
 	},
 	{
