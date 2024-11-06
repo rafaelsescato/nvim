@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Defina o endereço do servidor Neovim se não estiver definido
+export NVIM_LISTEN_ADDRESS=${NVIM_LISTEN_ADDRESS:-/tmp/nvim}
+
+if [ -e "$NVIM_LISTEN_ADDRESS" ]; then
+  nvim --server $NVIM_LISTEN_ADDRESS --remote-silent "$@"
+  
+  # Foco na janela do terminal Kitty com Neovim
+  wmctrl -a "neovim"
+
+else
+  kitty --class neovim -T neovim -e nvim "$@"
+fi
